@@ -1,1 +1,3 @@
+与Whitelist_Synchronizer插件配合使用的带白名单过滤器的Seen插件
+
 a plugin for MCDaemon
