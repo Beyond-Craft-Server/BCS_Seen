@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-
+import copy
 import os
 import json
 import time
@@ -13,6 +12,16 @@ helpmsg = '''------MCD SEEN插件------
 !!seen-top 查看摸鱼榜
 !!liver 查看所有在线玩家爆肝时长
 --------------------------------'''
+
+
+def isPlayer(name):
+	whitelist_path = ''
+	with open(whitelist_path, 'r') as f:
+		whitelist = list(f.read().split('\n'))
+		if name in whitelist:
+			return True
+		else:
+			return False
 
 
 def tell(server, player, message):
@@ -62,6 +71,26 @@ def onServerInfo(server, info):
     #     tell(server, info.player, f)
 
 
+# MCDR compatibility
+
+def on_load(server, old):
+    server.add_help_message('!!seen', '查看摸鱼榜/爆肝榜帮助')
+
+
+def on_player_joined(server, player):
+    onPlayerJoin(server, player)
+
+
+def on_player_left(server, player):
+    onPlayerLeave(server, player)
+
+
+def on_info(server, info):
+    info2 = copy.deepcopy(info)
+    info2.isPlayer = info2.is_player
+    onServerInfo(server, info2)
+
+
 def seen(server, info, playername):
     joined, left = player_seen(playername)
     if (left and joined) == 0:
@@ -92,8 +121,11 @@ def liver(server, info):
         joined, player = r
         dt = delta_time(joined)
         ft = formatted_time(dt)
-        msg = "§e{p}§r 已经肝了 §a{t}".format(p=player, t=ft)
-        server.tell(info.player, msg)
+        if isPlayer(player):
+            msg = "§e{p}§r 已经肝了 §a{t}".format(p=player, t=ft)
+            server.tell(info.player, msg)
+        else:
+            pass
 
 
 def seen_top(server, info):
@@ -112,8 +144,9 @@ def seen_top(server, info):
         left, player = r
         dt = delta_time(left)
         ft = formatted_time(dt)
-        msg = "{i}. §e{p}§r 已经摸了 §6{t}".format(i=i+1, p=player, t=ft)
-        server.tell(info.player, msg)
+        if isPlayer(player):
+            msg = "{i}. §e{p}§r 已经摸了 §6{t}".format(i=i+1, p=player, t=ft)
+            server.tell(info.player, msg)
 
 
 def now_time():
